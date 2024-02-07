@@ -28,6 +28,12 @@
             <tr><td class="border px-4 py-2">Script return code:</td><td class="border px-4 py-2">{{ $cm->script_return_code }}</td></tr>
             <tr><td class="border px-4 py-2">Temp at start of provisioning:</td><td class="border px-4 py-2">{{ $cm->temp1 }}</td></tr>
             <tr><td class="border px-4 py-2">Temp at end of provisioning:</td><td class="border px-4 py-2">{{ $cm->temp2 }}</td></tr>
+            @if(!is_null($cm->public_key))
+            <tr><td class="border px-4 py-2">Public key:</td><td class="border px-4 py-2">{{ $cm->public_key }}</td></tr>
+            @endif
+            @if(!is_null($cm->helium_key))
+              <tr><td class="border px-4 py-2">Helium key:</td><td class="border px-4 py-2">{{ $cm->helium_key }}</td></tr>
+            @endif
             <tr><td class="border px-4 py-2">First seen at:</td><td class="border px-4 py-2">{{ $cm->created_at }}</td></tr>
             <tr><td class="border px-4 py-2">Provisioning started at:</td><td class="border px-4 py-2">{{ $cm->provisioning_started_at }}</td></tr>
             <tr><td class="border px-4 py-2">Provisioning complete at:</td><td class="border px-4 py-2">@if ($cm->provisioning_complete_at) {{ $cm->provisioning_complete_at }} @else Not completed yet @endif</td></tr>

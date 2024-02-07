@@ -100,7 +100,9 @@ class ScriptExecuteController extends Controller
             'image_sha256'   => $image ? $image->sha256 : null,
             'provisioning_board' => $board,
             'provisioning_started_at' => now(),
-            'provisioning_complete_at' => null
+            'provisioning_complete_at' => null,
+            'public_key' => $req->query('public_key'),
+            'helium_key' => $req->query('helium_key')
         ]);
 
         if (!$project)
