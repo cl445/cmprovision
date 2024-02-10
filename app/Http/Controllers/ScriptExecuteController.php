@@ -147,22 +147,33 @@ class ScriptExecuteController extends Controller
             $server = substr($server, 0, -1).'%usb0]';
         }
 
-        if ($project->eeprom_firmware)
-        {
+        if ($project->eeprom_firmware) {
             $setting = Setting::findOrFail('active_eeprom_sha256');
             $eeprom_url = "http://$server/uploads/pieeprom.bin";
             $eeprom_sha256 = $setting->value;
+            $eeprom_spi_interface = "/dev/spidev1.0";
+
+            $scriptContent = file_get_contents(base_path('scripts/flash_eeprom.sh'));
+            $command = str_replace(
+                ['$1', '$2', '$3'],
+                [
+                    escapeshellarg($eeprom_url),
+                    escapeshellarg($eeprom_sha256),
+                    escapeshellarg($eeprom_spi_interface)
+                ],
+                $scriptContent
+            );
+
             $fscript = new Script;
             $fscript->id = 0;
             $fscript->name = 'Flash EEPROM firmware ('.$project->eeprom_firmware.')';
             $fscript->bg = false;
-            $fscript->script = "#!/bin/sh\n"
-                             . "set -e\n"
-                             . "curl --retry 10 --silent --show-error -g -o pieeprom.bin \"$eeprom_url\"\n"
-                             . "echo \"$eeprom_sha256  pieeprom.bin\" | sha256sum -c\n"
-                             . 'flashrom -p "linux_spi:dev=/dev/spidev0.0,spispeed=16000" -w "pieeprom.bin"'."\n";
+            $fscript->script = $command;
+
             $preinstall_scripts->prepend($fscript);
         }
+
+
 
         if ($project->verify && $image)
         {
@@ -171,17 +182,18 @@ class ScriptExecuteController extends Controller
             $fscript->name = 'Verifying written image';
             $fscript->bg = false;
 
-            if ($image->uncompressed_size % 1048576 == 0)
-                $ddline = "dd if=".$project->storage." bs=1M count=".($image->uncompressed_size / 1048576);
-            else
-                $ddline = "dd if=".$project->storage." count=".($image->uncompressed_size / 512);
+            $scriptContent = file_get_contents(base_path('scripts/verify_image.sh'));
+            $command = str_replace(
+                ['$1', '$2', '$3'],
+                [
+                    escapeshellarg($project->storage),
+                    escapeshellarg($image->uncompressed_size),
+                    escapeshellarg($image->uncompressed_sha256)
+                ],
+                $scriptContent
+            );
 
-            $fscript->script = "#!/bin/sh\n"
-                             . "set -e\n"
-                             . "sync; echo 3 > /proc/sys/vm/drop_caches\n"
-                             . 'READ_SHA256=$('."$ddline | sha256sum | awk '{print $1}')\n"
-                             . 'echo Computed SHA256: "$READ_SHA256"'."\n"
-                             . 'if [ "$READ_SHA256" = "'.$image->uncompressed_sha256.'" ]; then echo Verification successful!; else echo Verification failed; exit 2; fi'."\n";
+            $fscript->script = $command;
             $postinstall_scripts->prepend($fscript);
         }
 

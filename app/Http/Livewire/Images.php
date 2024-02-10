@@ -23,10 +23,9 @@ class Images extends Component
         $this->loadImages();
         $this->maxfilesize = Cache::remember('maxfilesize', 3600, fn() => UploadedFile::getMaxFilesize());
 
-        // Überprüfen, ob der uploads-Ordner existiert, und ihn bei Bedarf erstellen
         $uploadsPath = public_path('uploads');
         if (!file_exists($uploadsPath)) {
-            mkdir($uploadsPath, 0755, true); // Erstellt den Ordner mit Lese-/Schreibrechten
+            mkdir($uploadsPath, 0755, true);
         }
 
         $this->freediskspace = Cache::remember('freediskspace', 3600, fn() => min(disk_free_space("/tmp"), disk_free_space($uploadsPath)));

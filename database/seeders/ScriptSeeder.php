@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class ScriptSeeder extends Seeder
 {
@@ -14,65 +15,63 @@ class ScriptSeeder extends Seeder
      */
     public function run()
     {
-        $script = <<<'EOF'
-#!/bin/sh
-set -e
+        $pathToScripts = base_path('scripts');
 
-parted -s $STORAGE "resizepart 2 -1" "quit"
-resize2fs -f $PART2
+        $scripts = [
+            [
+                'name' => 'Resize ext4 partition',
+                'filename' => 'resize_ext4_partition.sh',
+                'script_type' => 'postinstall',
+                'priority' => 50,
+                'bg' => false,
+                'replace' => ['$STORAGE', '$PART2'],
+                'with' => ['/dev/sda1', '/dev/sda2'],
+            ],
+            [
+                'name' => 'Add dtoverlay=dwc2 to config.txt',
+                'filename' => 'add_dtoverlay_config.sh',
+                'script_type' => 'postinstall',
+                'priority' => 100,
+                'bg' => false,
+                'replace' => ['$PART1'],
+                'with' => ['/dev/mmcblk0p1'],
+            ],
+            [
+                'name' => 'Format eMMC as pSLC (one time settable only)',
+                'filename' => 'format_emmc_slc.sh',
+                'script_type' => 'preinstall',
+                'priority' => 100,
+                'bg' => false,
+                'replace' => ['$MAXSIZEKB'],
+                'with' => ['/dev/mmcblk0'],
+            ],
+        ];
 
-mkdir -p /mnt/boot /mnt/root
-mount -t ext4 $PART2 /mnt/root
-umount /mnt/root
-mount -t vfat $PART1 /mnt/boot
-sed -i 's| init=/usr/lib/raspi-config/init_resize\.sh||' /mnt/boot/cmdline.txt
-umount /mnt/boot
-EOF;
+        foreach ($scripts as $script) {
+            $filepath = $pathToScripts . '/' . $script['filename'];
+            if (File::exists($filepath)) {
+                $scriptContent = File::get($filepath);
+                $command = str_replace(
+                    $script['replace'],
+                    array_map('escapeshellarg', $script['with']),
+                    $scriptContent
+                );
 
-        DB::table('scripts')->insert([
-            'name' => 'Resize ext4 partition',
-            'script_type' => 'postinstall',
-            'priority' => 50,
-            'bg' => false,
-            'script' => $script
-        ]);
-
-        $script = <<<'EOF'
-#!/bin/sh
-set -e
-
-mkdir -p /mnt/boot
-mount -t vfat $PART1 /mnt/boot
-echo "dtoverlay=dwc2,dr_mode=host" >> /mnt/boot/config.txt
-umount /mnt/boot
-EOF;
-
-        DB::table('scripts')->insert([
-            'name' => 'Add dtoverlay=dwc2 to config.txt',
-            'script_type' => 'postinstall',
-            'priority' => 100,
-            'bg' => false,
-            'script' => $script
-        ]);
-
-
-        $script = <<<'EOF'
-#!/bin/sh
-set +e
-
-MAXSIZEKB=`mmc extcsd read /dev/mmcblk0 | grep MAX_ENH_SIZE_MULT -A 1 | grep -o '[0-9]\+ '`
-mmc enh_area set -y 0 $MAXSIZEKB /dev/mmcblk0
-if [ $? -eq 0 ]; then
-    reboot -f
-fi
-EOF;
-
-        DB::table('scripts')->insert([
-            'name' => 'Format eMMC as pSLC (one time settable only)',
-            'script_type' => 'preinstall',
-            'priority' => 100,
-            'bg' => false,
-            'script' => $script
-        ]);
+                // Only insert script into database if it's not empty
+                if (trim($command)) {
+                    DB::table('scripts')->insert([
+                        'name' => $script['name'],
+                        'script_type' => $script['script_type'],
+                        'priority' => $script['priority'],
+                        'bg' => $script['bg'],
+                        'script' => $command
+                    ]);
+                } else {
+                    echo "The script is empty for: $filepath ";
+                }
+            } else {
+                echo "File does not exist: $filepath ";
+            }
+        }
     }
 }
