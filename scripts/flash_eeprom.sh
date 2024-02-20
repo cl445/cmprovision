@@ -13,9 +13,9 @@ if [ "$#" -ne 3 ]; then
     exit 1
 fi
 
-EEPROM_URL="$1"
-EXPECTED_SHA256="$2"
-SPI_INTERFACE="$3"
+EEPROM_URL=${EEPROM_URL:-$1}
+EXPECTED_SHA256=${EXPECTED_SHA256:-$2}
+SPI_INTERFACE=${SPI_INTERFACE:-$3}
 
 # Temporary file to store the downloaded firmware
 TEMP_FIRMWARE_PATH=$(mktemp)

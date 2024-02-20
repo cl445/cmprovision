@@ -151,19 +151,17 @@ class ScriptExecuteController extends Controller
             $setting = Setting::findOrFail('active_eeprom_sha256');
             $eeprom_url = "http://$server/uploads/pieeprom.bin";
             $eeprom_sha256 = $setting->value;
-            $eeprom_spi_interface = "/dev/spidev1.0";
+            $eeprom_spi_interface = "/dev/spidev0.0";
 
-            $scriptContent = file_get_contents(base_path('scripts/flash_eeprom.sh'));
-            $command = str_replace(
-                ['$1', '$2', '$3'],
-                [
-                    escapeshellarg($eeprom_url),
-                    escapeshellarg($eeprom_sha256),
-                    escapeshellarg($eeprom_spi_interface)
-                ],
-                $scriptContent
-            );
+            $scriptPath = base_path('scripts/flash_eeprom.sh');
+            $scriptContent = file_get_contents($scriptPath);
+            $encodedScript = base64_encode($scriptContent);
 
+            $command = <<<EOT
+echo "$encodedScript" | base64 --decode > /tmp/flash_eeprom.sh
+chmod +x /tmp/flash_eeprom.sh
+/tmp/flash_eeprom.sh $(escapeshellarg($eeprom_url)) $(escapeshellarg($eeprom_sha256)) $(escapeshellarg($eeprom_spi_interface))
+EOT;
             $fscript = new Script;
             $fscript->id = 0;
             $fscript->name = 'Flash EEPROM firmware ('.$project->eeprom_firmware.')';
@@ -172,6 +170,7 @@ class ScriptExecuteController extends Controller
 
             $preinstall_scripts->prepend($fscript);
         }
+
 
 
 
