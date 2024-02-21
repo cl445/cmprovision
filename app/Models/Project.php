@@ -8,55 +8,61 @@ use Illuminate\Database\Eloquent\Model;
 class Project extends Model
 {
     use HasFactory;
-    protected $fillable = ['name','device','storage','image_id','label_id','label_moment','eeprom_firmware','eeprom_settings','verify'];
-    protected $casts = ['verify' => 'boolean'];
 
-    function image()
+    protected $fillable = [
+        'name', 'device', 'storage', 'image_id', 'label_id', 'label_moment',
+        'eeprom_firmware', 'eeprom_settings', 'verify'
+    ];
+
+    protected $casts = [
+        'verify' => 'boolean'
+    ];
+
+    public function image()
     {
         return $this->belongsTo(Image::class);
     }
 
-    function label()
+    public function label()
     {
         return $this->belongsTo(Label::class);
     }
 
-    function scripts()
+    public function scripts()
     {
         return $this->belongsToMany(Script::class);
     }
 
-    function cms()
+    public function cms()
     {
         return $this->hasMany(Cm::class);
     }
 
-    function isActive()
+    public function isActive()
     {
-        return $this->id == Project::getActiveId();
+        return $this->id == self::getActiveId();
     }
 
-    static function getActive()
+    public static function getActive()
     {
         $activeId = self::getActiveId();
-        if (!$activeId)
+        if (!$activeId) {
             return null;
-
-        return Project::find($activeId);
+        }
+        return self::find($activeId);
     }
 
-    static function getActiveId()
+    public static function getActiveId()
     {
-        $s = Setting::find('active_project');
-        if (!$s)
-            return null;
-        return intval($s->value);
+        $setting = Setting::find('active_project');
+        return $setting ? intval($setting->value) : null;
     }
 
-    function delete()
+    public function delete()
     {
-        if ($this->getActiveId() == $this->id)
-            Setting::destroy('active_project');
+        if ($this->isActive()) {
+            Setting::where('key', 'active_project')->delete();
+        }
 
         parent::delete();
     }
