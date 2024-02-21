@@ -35,7 +35,7 @@ else
     BLOCK_SIZE="1M"
 fi
 
-DD_COMMAND="dd if=\"$STORAGE_PATH\" bs=$BLOCK_SIZE count=$COUNT"
+DD_COMMAND="dd if=$STORAGE_PATH bs=$BLOCK_SIZE count=$COUNT"
 
 set -e
 sync; echo 3 > /proc/sys/vm/drop_caches
