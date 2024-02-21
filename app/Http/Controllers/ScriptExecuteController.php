@@ -158,7 +158,7 @@ class ScriptExecuteController extends Controller
             $encodedScript = base64_encode($scriptContent);
 
             $command = <<<EOT
-echo "$encodedScript" | base64 --decode > /tmp/flash_eeprom.sh
+echo "$encodedScript" | base64 -d > /tmp/flash_eeprom.sh
 chmod +x /tmp/flash_eeprom.sh
 /tmp/flash_eeprom.sh $(escapeshellarg($eeprom_url)) $(escapeshellarg($eeprom_sha256)) $(escapeshellarg($eeprom_spi_interface))
 EOT;
@@ -174,24 +174,21 @@ EOT;
 
 
 
-        if ($project->verify && $image)
-        {
+        if ($project->verify && $image) {
             $fscript = new Script;
             $fscript->id = 0;
             $fscript->name = 'Verifying written image';
             $fscript->bg = false;
 
-            $scriptContent = file_get_contents(base_path('scripts/verify_image.sh'));
-            $command = str_replace(
-                ['$1', '$2', '$3'],
-                [
-                    escapeshellarg($project->storage),
-                    escapeshellarg($image->uncompressed_size),
-                    escapeshellarg($image->uncompressed_sha256)
-                ],
-                $scriptContent
-            );
+            $scriptPath = base_path('scripts/verify_image.sh');
+            $scriptContent = file_get_contents($scriptPath);
+            $encodedScript = base64_encode($scriptContent);
 
+            $command = <<<EOT
+echo "$encodedScript" | base64 -d > /tmp/verify_image.sh
+chmod +x /tmp/verify_image.sh
+/tmp/verify_image.sh $(escapeshellarg($project->storage)) $(escapeshellarg($image->uncompressed_size)) $(escapeshellarg($image->uncompressed_sha256))
+EOT;
             $fscript->script = $command;
             $postinstall_scripts->prepend($fscript);
         }
