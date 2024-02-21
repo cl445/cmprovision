@@ -160,7 +160,7 @@ class ScriptExecuteController extends Controller
             $command = <<<EOT
 echo "$encodedScript" | base64 -d > /tmp/flash_eeprom.sh
 chmod +x /tmp/flash_eeprom.sh
-/tmp/flash_eeprom.sh $(escapeshellarg($eeprom_url)) $(escapeshellarg($eeprom_sha256)) $(escapeshellarg($eeprom_spi_interface))
+/tmp/flash_eeprom.sh $eeprom_url $eeprom_sha256 $eeprom_spi_interface
 EOT;
             $fscript = new Script;
             $fscript->id = 0;
@@ -187,7 +187,7 @@ EOT;
             $command = <<<EOT
 echo "$encodedScript" | base64 -d > /tmp/verify_image.sh
 chmod +x /tmp/verify_image.sh
-/tmp/verify_image.sh $(escapeshellarg($project->storage)) $(escapeshellarg($image->uncompressed_size)) $(escapeshellarg($image->uncompressed_sha256))
+/tmp/verify_image.sh $project->storage $image->uncompressed_size $image->uncompressed_sha256
 EOT;
             $fscript->script = $command;
             $postinstall_scripts->prepend($fscript);
