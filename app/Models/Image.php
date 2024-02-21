@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class Image extends Model
 {
@@ -13,20 +15,28 @@ class Image extends Model
 
     function imagepath()
     {
-        return public_path('uploads/'.$this->filename_on_server);
+        return 'uploads/'.$this->filename_on_server;
     }
 
     function filesize()
     {
-        return filesize( $this->imagepath() );
+        try {
+            return Storage::size($this->imagepath());
+        } catch (\Exception $e) {
+            Log::error("Error getting filesize for {$this->imagepath()}: {$e->getMessage()}");
+            return false;
+        }
     }
 
     function delete()
     {
-        // Delete image from filesystem
-        unlink( $this->imagepath() );
-
-        // Delete from database
-        parent::delete();
+        try {
+            if (Storage::exists($this->imagepath())) {
+                Storage::delete($this->imagepath());
+            }
+            parent::delete();
+        } catch (\Exception $e) {
+            Log::error("Error deleting image {$this->imagepath()}: {$e->getMessage()}");
+        }
     }
 }
