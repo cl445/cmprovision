@@ -34,6 +34,12 @@
             @if(!is_null($cm->helium_key))
               <tr><td class="border px-4 py-2">Helium key:</td><td class="border px-4 py-2">{{ $cm->helium_key }}</td></tr>
             @endif
+            @if(!is_null($cm->atecc_serial))
+              <tr><td class="border px-4 py-2">Public key:</td><td class="border px-4 py-2">{{ $cm->atecc_serial }}</td></tr>
+            @endif
+            @if(!is_null($cm->pet_name))
+              <tr><td class="border px-4 py-2">Helium key:</td><td class="border px-4 py-2">{{ $cm->pet_name }}</td></tr>
+            @endif
             <tr><td class="border px-4 py-2">First seen at:</td><td class="border px-4 py-2">{{ $cm->created_at }}</td></tr>
             <tr><td class="border px-4 py-2">Provisioning started at:</td><td class="border px-4 py-2">{{ $cm->provisioning_started_at }}</td></tr>
             <tr><td class="border px-4 py-2">Provisioning complete at:</td><td class="border px-4 py-2">@if ($cm->provisioning_complete_at) {{ $cm->provisioning_complete_at }} @else Not completed yet @endif</td></tr>

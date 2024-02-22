@@ -13,7 +13,7 @@ class Cm extends Model
         'serial','mac','model','memory_in_gb','storage','csd','cid','firmware',
         'image_filename', 'image_sha256', 'pre_script_output', 'post_script_output', 'script_return_code',
         'temp1', 'temp2', 'provisioning_board', 'provisioning_started_at', 'provisioning_complete_at', 'project_id',
-        'public_key', 'helium_key'
+        'public_key', 'helium_key', 'atecc_serial', 'pet_name'
     ];
     
     protected $casts = [
