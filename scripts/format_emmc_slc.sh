@@ -9,7 +9,7 @@ fi
 set +e
 
 MAXSIZEKB=$(mmc extcsd read /dev/mmcblk0 | grep MAX_ENH_SIZE_MULT -A 1 | grep -o '[0-9]\+ ')
-mmc enh_area set -ei 0 "$MAXSIZEKB" /dev/mmcblk0
+mmc enh_area set -ei 0 $MAXSIZEKB /dev/mmcblk0
 if [ $? -eq 0 ]; then
     echo "MMC enhance area set successfully. Rebooting now..."
     sleep 2

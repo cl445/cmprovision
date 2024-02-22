@@ -17,6 +17,6 @@ fi
 set -e
 
 mkdir -p /mnt/boot
-mount -t vfat "$PART1" /mnt/boot
+mount -t vfat $PART1 /mnt/boot
 echo "dtoverlay=dwc2,dr_mode=host" >> /mnt/boot/config.txt
 umount /mnt/boot
