@@ -30,4 +30,7 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'external_services' => [
+        'post_provisioning' => env('POST_PROVISIONING_SERVICE_URL'),
+    ],
 ];
